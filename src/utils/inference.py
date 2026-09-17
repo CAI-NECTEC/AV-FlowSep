@@ -1,7 +1,7 @@
 import os
 import torch
 import torch.nn.functional as F
-from pesq import pesq
+from pypesq import pesq
 from pystoi import stoi
 from src.utils.other import si_sdr, pad_spec
 from vocos import Vocos
@@ -65,7 +65,7 @@ def evaluate_model(model, num_eval_files, vocoder_path):
         x = resample_poly(x, up=2, down=3)
 
         _si_sdr += si_sdr(x, x_hat)
-        _pesq += pesq(sr, x, x_hat, 'wb') 
+        _pesq += pesq(x, x_hat, sr)
         _estoi += stoi(x, x_hat, sr, extended=True)
         
     return _pesq/num_eval_files, _si_sdr/num_eval_files, _estoi/num_eval_files
