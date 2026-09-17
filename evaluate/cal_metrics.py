@@ -5,14 +5,11 @@ import torchaudio
 import librosa
 import numpy as np
 import pandas as pd
-from pesq import pesq
-# from pypesq import pesq
+from pypesq import pesq
 from pystoi import stoi
-# from UTMOS import UTMOSScore
 from DNSMOS import deep_noise_suppression_mean_opinion_score
 from periodicity import calculate_periodicity_metrics
 from pymcd.mcd import Calculate_MCD
-# import IPython.display as ipd
 from tqdm.auto import tqdm
 tqdm.pandas()
 
@@ -66,15 +63,13 @@ def load_align_audio(audio_ref, audio_deg, sr=16000, method="cut"):
 sr = 16000
 align_mode = "cut" # cut, dtw
 
-csv_path = "/project/lt200299-aicook/earth/interspeech2026/results/mossformer2-lrs2-audioset/result.csv"
+csv_path = "infer_result.csv"
 
-save_path = "/project/lt200299-aicook/earth/interspeech2026/av-flowsep/metrics/results/mossformer2-lrs2-audioset.csv"
+save_path = "save_path.csv"
 
 os.makedirs("./results", exist_ok=True)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
-# utmos_model = UTMOSScore(device=device)
 
 df = pd.read_csv(csv_path)
 
@@ -91,12 +86,6 @@ def process_row(row):
     audio_pred, _ = librosa.load(pred_wav, sr=sr)
 
     results = {}
-
-    # # UTMOS
-    # _utmos = utmos_model.score(
-    #     torch.Tensor(audio_pred).unsqueeze(0).to(device)
-    # ).mean()
-    # results["utmos"] = float(_utmos.item())
 
     # DNSMOS
     _, _dnsmos_sig, _dnsmos_bak, _dnsmos_ovrl = \
@@ -117,18 +106,8 @@ def process_row(row):
         audio_clean, audio_pred, sr=sr, method=align_mode
     )
 
-    # # Periodicity
-    # _periodicity_loss, _pitch_loss, _f1_score = calculate_periodicity_metrics(
-    #     torch.Tensor(audio_clean).unsqueeze(0),
-    #     torch.Tensor(audio_pred).unsqueeze(0)
-    # )
-    # results["periodicity_loss"] = float(_periodicity_loss.item())
-    # results["pitch_loss"] = float(_pitch_loss.item())
-    # results["f1_score"] = float(_f1_score.item())
-
     # PESQ
-    results["pesq"] = float(pesq(sr, audio_clean, audio_pred, "wb")) # nb, wb
-    # results["pesq"] = pesq(audio_clean, audio_pred, sr)
+    results["pesq"] = pesq(audio_clean, audio_pred, sr)
 
     # SI-SDR
     results["si_sdr"] = float(si_sdr(audio_clean, audio_pred))
@@ -142,14 +121,10 @@ df_results = df.progress_apply(process_row, axis=1)
 df = pd.concat([df, df_results], axis=1)
 df.to_csv(save_path, index=False)
 
-# print(f"UTMOS: {df['utmos'].mean().item():.3f} ↑")
 print(f"DNSMOS SIG: {df['dnsmos_sig'].mean().item():.3f} ↑")
 print(f"DNSMOS BAK: {df['dnsmos_bak'].mean().item():.3f} ↑")
 print(f"DNSMOS OVRL: {df['dnsmos_ovrl'].mean().item():.3f} ↑")
 print(f"MCD: {df['mcd'].mean().item():.3f} ↓")
-# print(f"Periodicity: {df['periodicity_loss'].mean().item():.3f} ↓")
-# print(f"Pitch Loss: {df['pitch_loss'].mean().item():.3f} ↓")
-# print(f"V/UV F1: {df['f1_score'].mean().item():.3f} ↑")
 print(f"PESQ: {df['pesq'].mean().item():.3f} ↑")
 print(f"SI SDR: {df['si_sdr'].mean().item():.3f} ↑")
 print(f"STOI: {df['stoi'].mean().item():.3f} ↑")
