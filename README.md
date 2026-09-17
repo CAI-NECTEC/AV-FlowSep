@@ -104,7 +104,3 @@ The paper link will be added soon. In the meantime, please cite:
 ## Acknowledgements
 
 This work was supported by NECTEC, NSTDA, Thailand, under the CAI research team. Computing resources were provided by ThaiSC on the LANTA supercomputer. We build on [TalkNet-ASD](https://github.com/TaoRuijie/TalkNet-ASD), [DiT](https://github.com/facebookresearch/DiT), and [Vocos](https://github.com/gemelo-ai/vocos).
-
-## License
-
-Released under the MIT License.
