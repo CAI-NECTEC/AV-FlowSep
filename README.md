@@ -10,7 +10,7 @@
 AV-FlowSep separates a target speaker's voice from a mixture using visual cues from their face. It uses conditional flow matching to learn a straight transport path from the mixture mel-spectrogram to the clean one. The backbone is a Diffusion Transformer (DiT), and visual features come in through cross-attention. It produces high-quality speech **in a single inference step**, where diffusion-based methods need about 30.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/CAI-NECTEC/cai-nectec.github.io/main/docs/AV-FlowSep/asset/image/Architecture.png" width="500" alt="Architecture">
+  <img src="https://raw.githubusercontent.com/CAI-NECTEC/cai-nectec.github.io/main/docs/AV-FlowSep/asset/image/Architecture.png" width="400" alt="Architecture">
 </p>
 
 The model has three parts:
