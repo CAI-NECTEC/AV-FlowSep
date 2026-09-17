@@ -1,0 +1,31 @@
+--extra-index-url https://download.pytorch.org/whl/cu118
+ 
+# Core
+torch==2.5.1+cu118
+torchaudio==2.5.1+cu118
+torchvision==0.20.1+cu118
+pytorch-lightning==2.1.4
+torchmetrics==1.9.0
+torch-ema==0.3
+torchsde==0.2.6
+einops==0.8.2
+ 
+# Audio / video / data
+numpy==1.26.4
+scipy==1.10.1
+pandas==2.3.3
+soundfile==0.14.0
+opencv-python==4.11.0.86
+PyYAML==6.0.3
+tqdm==4.70.1
+ 
+# Vocoder
+vocos==0.1.0
+encodec==0.1.1
+ 
+# Pretrained weights
+huggingface_hub==1.31.0
+ 
+# Evaluation metrics
+pystoi==0.4.1
+pypesq @ https://github.com/vBaiCai/python-pesq/archive/master.zip
