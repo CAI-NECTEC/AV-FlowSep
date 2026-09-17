@@ -9,7 +9,9 @@
 
 AV-FlowSep separates a target speaker's voice from a mixture using visual cues from their face. It uses conditional flow matching to learn a straight transport path from the mixture mel-spectrogram to the clean one. The backbone is a Diffusion Transformer (DiT), and visual features come in through cross-attention. It produces high-quality speech **in a single inference step**, where diffusion-based methods need about 30.
 
-![Architecture](https://github.com/CAI-NECTEC/cai-nectec.github.io/blob/main/docs/AV-FlowSep/asset/image/Architecture.png)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/CAI-NECTEC/cai-nectec.github.io/main/docs/AV-FlowSep/asset/image/Architecture.png" width="500" alt="Architecture">
+</p>
 
 The model has three parts:
 
@@ -55,15 +57,15 @@ The inference script downloads both automatically and reuses the local cache on 
 The data module reads a CSV with one row per target speaker:
 
 ```csv
-mp4, clean_wav, mix_wav
-visual_target_path.mp4, clean_audio_path.wav, mix_audio_path.wav
+mp4,clean_wav,mix_wav
+visual_target_path.mp4,clean_audio_path.wav,mix_audio_path.wav
 ```
 
 - `mp4`: video of the target speaker
 - `clean_wav`: the target speaker's clean reference audio
 - `mix_wav`: the mixture
 
-A sample test file is in `samples/vox2_2mix_tt.csv`.
+A sample test file is in `./data/test.csv`.
 
 ## Inference
 
@@ -84,7 +86,7 @@ python train.py \
   --vocoder-path pretrained/vocos-mel-24khz
 ```
 
-By default training runs 200 epochs with batch size 8, Adam at lr 1e-4, and DDP on 4 nodes × 4 GPUs. Override the setup with `--num-nodes` and `--devices`. Checkpoints are saved for the best PESQ, SI-SDR, and validation loss. The pretrained visual frontend comes from [TalkNet-ASD](https://github.com/TaoRuijie/TalkNet-ASD).
+By default training runs 200 epochs with batch size 8, Adam at lr 1e-4, and DDP on 4 nodes × 4 GPUs. Override the setup with `--num-nodes` and `--devices`. Checkpoints are saved for the best PESQ, and validation loss. The pretrained visual frontend comes from [TalkNet-ASD](https://github.com/TaoRuijie/TalkNet-ASD).
 
 ## Citation
 
