@@ -1,124 +1,122 @@
-import torch
-import random
-import numpy as np
-
-import torch
-import pytorch_lightning as pl
-from pytorch_lightning.strategies import DDPStrategy
-from pytorch_lightning.loggers import CSVLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
-
-from src.model import AVFlowModel
-from src.data_module import MelSpecDataModule
-
+mport argparse
 import warnings
-warnings.filterwarnings(action='ignore')
 
-def seed_everything(seed):
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed) 
-    torch.cuda.manual_seed_all(seed)  # if use multi-GPU
-    torch.backends.cudnn.deterministic = True 
+import pytorch_lightning as pl
+import torch
+from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.loggers import CSVLogger
+
+from src.data_module import MelSpecDataModule
+from src.model import AVFlowModel
+
+warnings.filterwarnings("ignore")
+
+
+def set_seed(seed: int) -> None:
+    pl.seed_everything(seed, workers=True)
+    torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
-    np.random.seed(seed) 
-    random.seed(seed) 
 
-seed_everything(112)
 
-# ==================================
-# ============ Settings ============
-# ==================================
+def build_callbacks(save_path: str) -> list:
+    """Checkpoint the latest epoch plus the best model for each metric."""
 
-save_path = "save_path"
+    def best(metric: str, mode: str) -> ModelCheckpoint:
+        return ModelCheckpoint(
+            dirpath=save_path,
+            filename=f"best-{metric}-{{epoch:02d}}-{{{metric}:.4f}}",
+            monitor=metric,
+            mode=mode,
+            save_top_k=1,
+            save_last=False,
+        )
 
-backbone = "avss_dit"
-ode = "flowmatching" # flowmatching | without_latent | with_latent
-lr = 1e-4
-num_eval_files = 50
-loss_type = "mse"
-pretrained_talknet = "pretrain_talknet_model_path"
-vocoder_path = "vocoder_path"
+    latest = ModelCheckpoint(
+        dirpath=save_path,
+        filename="model-{epoch:02d}",
+        save_top_k=1,  # -1 to keep every epoch
+        save_last=False,
+        save_on_train_epoch_end=True,
+    )
 
-epochs = 1000
-accelerator = "gpu"
-strategy = "ddp_find_unused_parameters_true" # ddp, auto, ddp_notebook, ddp_find_unused_parameters_true
-num_nodes = 16
-devices = 4 # "auto"
+    return [
+        latest,
+        best("pesq", "max"),
+        best("valid_loss", "min"),
+    ]
 
-data_module_kwargs = {
-    "train_ann_file": "train_dataset_path",
-    "val_ann_file": "eval_dataset_path",
-    "test_ann_file": "test_dataset_path",
-    "batch_size": 8,
-    "num_workers": 4
-}
+def parse_args():
+    p = argparse.ArgumentParser(description=__doc__)
 
-# ==================================
-# ==================================
-# ==================================
+    # Paths
+    p.add_argument("--save-path", required=True, help="Directory for checkpoints and logs")
+    p.add_argument("--train-ann", required=True, help="Training annotation CSV")
+    p.add_argument("--val-ann", required=True, help="Validation annotation CSV")
+    p.add_argument("--test-ann", default="", help="Test annotation CSV")
+    p.add_argument("--pretrained-talknet", required=True, help="Pretrained TalkNet checkpoint")
+    p.add_argument("--vocoder-path", required=True, help="Vocos vocoder directory")
 
-model = AVFlowModel(
-    backbone = backbone,
-    # depth = 12,
-    # hidden_dim = 512,
-    # num_heads = 8,
-    ode = ode, # flowmatching | without_latent | with_latent
-    lr = lr,
-    num_eval_files = num_eval_files,
-    loss_type = loss_type,
-    pretrained_talknet = pretrained_talknet,
-    vocoder_path = vocoder_path,
-    data_module_cls = MelSpecDataModule,
-    **data_module_kwargs
-)
+    # Model
+    p.add_argument("--backbone", default="avss_dit")
+    p.add_argument("--ode", default="flowmatching",
+                   choices=["flowmatching", "without_latent", "with_latent"])
+    p.add_argument("--loss-type", default="mse")
+    p.add_argument("--lr", type=float, default=1e-4)
+    p.add_argument("--num-eval-files", type=int, default=50)
 
-logger = CSVLogger(save_dir=save_path, name="logs")
+    # Data
+    p.add_argument("--batch-size", type=int, default=8)
+    p.add_argument("--num-workers", type=int, default=4)
 
-callbacks = ModelCheckpoint(
-    dirpath=save_path,
-    filename="model-{epoch:02d}",
-    save_top_k=1, # -1 save all every epoch
-    # every_n_epochs=10,
-    save_last=False,
-    save_on_train_epoch_end=True
-)
+    # Trainer
+    p.add_argument("--epochs", type=int, default=200)
+    p.add_argument("--accelerator", default="gpu")
+    p.add_argument("--strategy", default="ddp_find_unused_parameters_true",
+                   help="ddp | auto | ddp_notebook | ddp_find_unused_parameters_true")
+    p.add_argument("--num-nodes", type=int, default=4)
+    p.add_argument("--devices", default="4", help='GPUs per node, or "auto"')
+    p.add_argument("--accumulate-grad-batches", type=int, default=1)
+    p.add_argument("--seed", type=int, default=112)
 
-ckpt_pesq = ModelCheckpoint(
-    dirpath=save_path,
-    filename="best-pesq-{epoch:02d}-{pesq:.4f}",
-    monitor="pesq",
-    mode="max",
-    save_top_k=1,
-    save_last=False
-)
+    args = p.parse_args()
+    if args.devices != "auto":
+        args.devices = int(args.devices)
+    return args
 
-ckpt_si_sdr = ModelCheckpoint(
-    dirpath=save_path,
-    filename="best-si_sdr-{epoch:02d}-{si_sdr:.4f}",
-    monitor="si_sdr",
-    mode="max",
-    save_top_k=1,
-    save_last=False
-)
 
-ckpt_loss = ModelCheckpoint(
-    dirpath=save_path,
-    filename="best-loss-{epoch:02d}-{valid_loss:.4f}",
-    monitor="valid_loss",
-    mode="min",
-    save_top_k=1,
-    save_last=False
-)
+def main():
+    args = parse_args()
+    set_seed(args.seed)
 
-trainer = pl.Trainer(
-    accelerator=accelerator,
-    strategy=strategy, # ddp, auto, ddp_notebook
-    devices=devices,
-    num_nodes=num_nodes,
-    max_epochs=epochs,
-    accumulate_grad_batches=1,
-    logger=logger,
-    callbacks=[callbacks, ckpt_pesq, ckpt_si_sdr, ckpt_loss]
-)
+    model = AVFlowModel(
+        backbone=args.backbone,
+        ode=args.ode,
+        lr=args.lr,
+        num_eval_files=args.num_eval_files,
+        loss_type=args.loss_type,
+        pretrained_talknet=args.pretrained_talknet,
+        vocoder_path=args.vocoder_path,
+        data_module_cls=MelSpecDataModule,
+        train_ann_file=args.train_ann,
+        val_ann_file=args.val_ann,
+        test_ann_file=args.test_ann,
+        batch_size=args.batch_size,
+        num_workers=args.num_workers,
+    )
 
-trainer.fit(model)
+    trainer = pl.Trainer(
+        accelerator=args.accelerator,
+        strategy=args.strategy,
+        devices=args.devices,
+        num_nodes=args.num_nodes,
+        max_epochs=args.epochs,
+        accumulate_grad_batches=args.accumulate_grad_batches,
+        logger=CSVLogger(save_dir=args.save_path, name="logs"),
+        callbacks=build_callbacks(args.save_path),
+    )
+
+    trainer.fit(model)
+
+
+if __name__ == "__main__":
+    main()
