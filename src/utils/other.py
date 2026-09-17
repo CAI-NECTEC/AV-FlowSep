@@ -4,7 +4,7 @@ import numpy as np
 import scipy.stats
 from scipy.signal import butter, sosfilt
 
-from pesq import pesq
+from pypesq import pesq
 from pystoi import stoi
 
 
