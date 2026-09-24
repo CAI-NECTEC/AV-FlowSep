@@ -2,8 +2,8 @@
 
 [![Project Page](https://img.shields.io/badge/Project-Page-blue)](https://cai-nectec.github.io/AV-FlowSep/)
 [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Model-yellow)](https://huggingface.co/nectec/av-flowsep)
-[![Paper](https://img.shields.io/badge/Paper-Coming%20Soon-lightgrey)](#)
-[![Interspeech 2026](https://img.shields.io/badge/Interspeech-2026-red)](#)
+[![Paper](https://img.shields.io/badge/Paper-Coming%20Soon-lightgrey)](https://www.isca-archive.org/interspeech_2026/tipaksorn26_interspeech.html#)
+[![Interspeech 2026](https://img.shields.io/badge/Interspeech-2026-red)](https://www.isca-archive.org/interspeech_2026/tipaksorn26_interspeech.html#)
 
 ## Overview
 
