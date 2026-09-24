@@ -92,11 +92,14 @@ By default training runs 200 epochs with batch size 8, Adam at lr 1e-4, and DDP 
 The paper link will be added soon. In the meantime, please cite:
 
 ```bibtex
-@inproceedings{tipaksorn2026avflowsep,
-  title     = {AV-FlowSep: Audio-Visual Target Speaker Separation via Flow Matching},
+@inproceedings{tipaksorn26_interspeech,
+  title     = {{AV-FlowSep: Audio-Visual Target Speaker Separation via Flow Matching}},
   author    = {Pattara Tipaksorn and Wayupuk Sommuang and Kwanchiva Thangthai},
-  booktitle = {Proc. Interspeech},
-  year      = {2026}
+  year      = {2026},
+  booktitle = {{Interspeech 2026}},
+  pages     = {7143--7147},
+  doi       = {10.21437/Interspeech.2026-1960},
+  issn      = {2958-1796},
 }
 ```
 
