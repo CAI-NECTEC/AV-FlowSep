@@ -1,4 +1,4 @@
-mport argparse
+import argparse
 import warnings
 
 import pytorch_lightning as pl
@@ -71,7 +71,7 @@ def parse_args():
     # Trainer
     p.add_argument("--epochs", type=int, default=200)
     p.add_argument("--accelerator", default="gpu")
-    p.add_argument("--strategy", default="ddp_find_unused_parameters_true",
+    p.add_argument("--strategy", default="ddp",
                    help="ddp | auto | ddp_notebook | ddp_find_unused_parameters_true")
     p.add_argument("--num-nodes", type=int, default=4)
     p.add_argument("--devices", default="4", help='GPUs per node, or "auto"')
